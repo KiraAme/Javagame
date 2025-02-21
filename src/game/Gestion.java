@@ -1,6 +1,10 @@
 package game;
 
+import java.util.Random;
 import java.util.Scanner;
+
+import game.Niveau.dir;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,12 +16,14 @@ import java.nio.file.Paths;
  */
 public class Gestion {
 	
-	public static int jouer(Joueur j, Niveau n) {
-		j.setCoord(1, 0);
-        n.appendJoueur(j);
+	public static int jouer(Niveau n) {
+		Joueur j=n.getJoueurTab()[0];
+		Ennemi [] e=n.getEnnmiTab();
         System.out.println(n.toString());
         System.out.println(j.toString());
         Scanner inp= new Scanner(System.in);
+        
+        
         boolean jouer=true;
         do {
             System.out.println("Dans quelle direction voulez-vous le déplacer");
@@ -27,21 +33,62 @@ public class Gestion {
             
             
             switch (dire) {
-                case 'N': direction = Niveau.dir.N; break;
+                case 'Z': direction = Niveau.dir.N; break;
                 case 'S': direction = Niveau.dir.S; break;
-                case 'E': direction = Niveau.dir.E; break;
-                case 'W': direction = Niveau.dir.W; break;
-                case 'Q': jouer=false; break;
+                case 'D': direction = Niveau.dir.E; break;
+                case 'Q': direction = Niveau.dir.W; break;
+                case 'E': jouer=false; System.out.println("Merci d'avoir joué"); System.exit(0);
                 default:
                     System.out.println("Direction invalide");
                     continue;
             }
             if(jouer) {
-            	int res=n.moveJoueur(j, direction);
+            	for(int i=0;i<e.length;i++) {
+            		dir[] direc=dir.values();
+                	Random rand = new Random();
+                	int randomIndex = rand.nextInt(direc.length);
+                	e[i].move(n, direc[randomIndex]);
+            	}
+            	int res=j.move(n, direction);  	
             	if(res==1) {
+            		System.out.println("Victoire\n"
+    						+ "\r\n"
+    						+ "      (_)    | |                  \r\n"
+    						+ "__   ___  ___| |_ ___  _ __ _   _ \r\n"
+    						+ "\\ \\ / / |/ __| __/ _ \\| '__| | | |\r\n"
+    						+ " \\ V /| | (__| || (_) | |  | |_| |\r\n"
+    						+ "  \\_/ |_|\\___|\\__\\___/|_|   \\__, |\r\n"
+    						+ "                             __/ |\r\n"
+    						+ "                            |___/ ");
             		return 1;
             	}
             	else if(res==2){
+            		System.out.println("GAME OVER\n"
+    						+"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼\n"
+    						+"███▀▀▀██┼███▀▀▀███┼███▀█▄█▀███┼██▀▀▀\n"
+    						+"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼█┼┼┼██┼██┼┼┼\n"
+    						+"██┼┼┼▄▄▄┼██▄▄▄▄▄██┼██┼┼┼▀┼┼┼██┼██▀▀▀\n"
+    						+"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██┼┼┼\n"
+    						+"███▄▄▄██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██▄▄▄\n"
+    						+"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼\n"
+    						+"███▀▀▀███┼▀███┼┼██▀┼██▀▀▀┼██▀▀▀▀██▄┼\n"
+    						+"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██┼┼┼┼██┼┼┼┼┼██┼\n"
+    						+"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██▀▀▀┼██▄▄▄▄▄▀▀┼\n"
+    						+"██┼┼┼┼┼██┼┼┼██┼┼█▀┼┼██┼┼┼┼██┼┼┼┼┼██┼\n"
+    						+"███▄▄▄███┼┼┼─▀█▀┼┼─┼██▄▄▄┼██┼┼┼┼┼██▄\n"
+    						+"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼████▄┼┼┼▄▄▄▄▄▄▄┼┼┼▄████┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼┼▀▀█▄█████████▄█▀▀┼┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼┼┼┼█████████████┼┼┼┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼┼┼┼██▀▀▀███▀▀▀██┼┼┼┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼┼┼┼██┼┼┼███┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼┼┼┼█████▀▄▀█████┼┼┼┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼┼┼┼┼███████████┼┼┼┼┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼▄▄▄██┼┼█▀█▀█┼┼██▄▄▄┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼▀▀██┼┼┼┼┼┼┼┼┼┼┼██▀▀┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼\n"
+    						+"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼\n");
             		return 2;
             	}
             }
@@ -63,8 +110,8 @@ public class Gestion {
 			String nom = inp_nom.next();
 			Joueur joueur1 = new Joueur(nom);
 			for(int i=0; i< args.length;i++) {
-				Niveau n= new Niveau(Paths.get(args[i]));
-				int res=jouer(joueur1,n);
+				Niveau n= new Niveau(Paths.get(args[i]),joueur1);
+				int res=jouer(n);
 				if(res==2) {
 					System.out.println("Voulez-vous rejouer Y/N");
 					Scanner inp_rj = new Scanner(System.in);

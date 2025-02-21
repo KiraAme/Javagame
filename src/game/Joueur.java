@@ -1,4 +1,7 @@
 package game;
+
+import game.Niveau.dir;
+
 /**
  * 
  * Classe Joueur permettant de gérer des joueurs avec chacun un nom et des points
@@ -46,10 +49,123 @@ public class Joueur extends Personnage{
     public int getPoints() { //getter des points
         return this.points;
     }
+    /**
+	 * ajoute un joueur dans le tableau de joueur et le pose sur la carte à ses coordonées
+	 * @param n niveau
+	 * @throws OutOfBorderException
+	 */
+    @Override
+	public void appendp(Niveau n) {
+		Joueur[] t=n.getJoueurTab();
+		if (t.length >= n.getNbJoueur()) {
+			t[0]=this;
+			Cellule[][] tablo= n.getTab();
+			n.verification(this.getX(),this.getY());
+			tablo[this.getX()][this.getY()].setId('1');//(char) (nbJoueur +'0');
+			n.setCoDeBase(this.getX(),0);
+			n.setCoDeBase(this.getY(),1);		
+		}
+	}
+    
+    /**
+	 * déplacement d'un joueur
+	 * @param n niveau
+	 * @param direction N S E W pour bouger le personnage de 1 
+	 * @throws OutOfBorderException
+	 */
+    @Override
+	public int move(Niveau n ,dir direction) {
+			Cellule[][] tablo= n.getTab();
+			int[] coo=new int[2];
+			coo=this.checkdir(direction);
+			int jx=coo[0];
+			int jy=coo[1];
+			int jx2=coo[2];
+			int jy2=coo[3];
+			
+			try {
+				int[] newco=new int[2];
+				newco=this.checktore(tablo, jx2, jy2);
+				jx2=newco[0];
+				jy2=newco[1];
+				n.verification(jx2,jy2);
+				
+				if(tablo[jx2][jy2].getId()==5) {
+					this.setVie(this.getVie()-1);
+					int numEnnemi=0;
+					int xB=n.getCoDeBase()[0];
+					int yB=n.getCoDeBase()[1];
+					for(int i=0;i<n.getEnnmiTab().length;i++) {
+						if(jx2==n.getEnnmiTab()[i].getX() && jy2==n.getEnnmiTab()[i].getY() ) {
+							numEnnemi= i;
+						}
+					}
+					int xB2=n.getCoDeBase()[2*numEnnemi];
+					int yB2=n.getCoDeBase()[2*numEnnemi+1];
+					tablo[xB][yB].setId('1');
+					this.setCoord(xB,yB);
+					tablo[n.getEnnmiTab()[numEnnemi].getX()][n.getEnnmiTab()[numEnnemi].getY()].setId(' ');
+					tablo[xB2][yB2].setId('R');
+					n.getEnnmiTab()[numEnnemi].setCoord(xB2, yB2);
+					if(tablo[jx2][jy2].getIsPiece()==1) {
+						
+						tablo[jx2][jy2].setId('.');
+					}
+					else {
+						tablo[jx2][jy2].setId(' ');
+					}
+					
+						
+				}
+				else if(tablo[jx2][jy2].getId()==2) {
+					this.setCoord(jx2,jy2);
+					this.setPoints(this.getPoints()+100);
+					n.setNbPieces(n.getNbPieces()-1);
+					tablo[jx2][jy2].setIsPiece(0);
+					tablo[jx2][jy2].setId('1');
+				}
+				else if(tablo[jx2][jy2].getId()==3) {
+					this.setVie(this.getVie()-1);
+					int xB=n.getCoDeBase()[0];
+					int yB=n.getCoDeBase()[1];
+					tablo[xB][yB].setId('1');
+					this.setCoord(xB,yB);
+				}
+				else {
+					this.setCoord(jx2,jy2);
+					tablo[jx2][jy2].setId('1');
+				}
+				if(tablo[jx][jy].getId()==5) {
+					tablo[jx][jy].setId('R');
+				}
+				else {
+					tablo[jx][jy].setId(' ');
+				}
+				
+				
+				
+			}catch(OutOfBorderException e) {
+				
+			}
+			System.out.println(n.toString());
+			System.out.println(this.toString());
+			
+			if(n.getNbPieces()==0) {
+				
+				return 1;
+			}
+			if(this.getVie()==0 ) {
+				
+				this.setVie(3);
+				this.setPoints(this.getPoints()-(n.getNbPiecesBase()-n.getNbPieces())*100);
+				return 2;
+			}return 0;
+		}
+    
     
     /**
      * Redéfinition de la méthode toString
-     * @return le nom du joueur et ses points au singulier s'il en a 0 ou 1 et au pluriel s'il en a plus de 1
+     * @return le nom du joueur et ses points et ses pvs au singulier s'il en a 0 ou 1 et au pluriel s'il en a plus de 1
      */
     @Override
     public String toString() {

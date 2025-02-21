@@ -4,6 +4,7 @@ public class Cellule {
 	private int x;
 	private int y;
 	private int id;
+	private int isPiece;
 	/**
 	 * constructeur d'une cellule
 	 * @param i position x
@@ -13,6 +14,7 @@ public class Cellule {
 	public Cellule(int i, int j, char n) {
 		this.x=i;
 		this.y=j;
+		this.isPiece=0;
 		switch(n) {
 		case ' ': 
 			this.id=0;
@@ -22,12 +24,16 @@ public class Cellule {
 			break;
 		case '.':
 			this.id=2;
+			this.isPiece=1;
 			break;
 		case '*':
 			this.id=3;
 			break;
 		case '1':
 			this.id=4;
+			break;
+		case 'R':
+			this.id=5;
 			break;
 			
 		default:
@@ -77,12 +83,31 @@ public class Cellule {
 		case '1':
 			this.id=4;
 			break;
+		case 'R':
+			this.id=5;
+			break;
 			
 		default:
 			this.id=0;
 			break;
 		}
 		
+	}
+	/**
+	 * getter isPiece
+	 * @return si la case contient une piece
+	 */
+	public int getIsPiece() {
+		return this.isPiece;
+	}
+	/**
+	 * setter isPiece
+	 * @param i 1 ou 0
+	 */
+	public void setIsPiece(int i) {
+		if(i==1 ||i==0) {
+			this.isPiece=i;
+		}	
 	}
 	/**
 	 * Réecriture de toString 
@@ -101,6 +126,8 @@ public class Cellule {
 				return "*";
 		case 4:
 				return "1";
+		case 5:
+				return "R";
 		default:
 				return " ";
 		}	

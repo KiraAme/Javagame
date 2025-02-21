@@ -15,9 +15,10 @@ import java.util.List;
 public class Niveau {
 	private Cellule[][] tab; // tableau de tableau de cellule
 	private Joueur[] joueur; // tableau des joueurs
+	private Ennemi[] ennemi;
 	private int nbJoueur; //nb des joueurs actuels sur la carte
-	private int xBase;
-	private int yBase;
+	private int[] coDeBase;
+	private int comptEnnemi;
 	private int nbPieces =0; //nb de pieces actuellement sur le niveau
 	private int nbPiecesBase=0;
 	/**
@@ -48,6 +49,8 @@ public class Niveau {
 	 */
 	public Niveau(int lt, int lt2) {
 		this.joueur = new Joueur[1];
+		this.ennemi = new Ennemi[1];
+		this.coDeBase = new int[4];
 		this.tab = new Cellule[lt][lt2];
 		for(int i=0;i<lt;i++) {
 			for(int j=0;j<lt2;j++) {
@@ -69,8 +72,9 @@ public class Niveau {
 	 * Constructeur à partir d'un fichier texte.
 	 * @param chemin est le chemin du fichier texte
 	 */
-	public Niveau(Path chemin) {
+	public Niveau(Path chemin,Joueur jo) {
 		this.joueur = new Joueur[1];
+		this.comptEnnemi=0;
 		try {
 			List<String> tablo = Files.readAllLines(chemin);
 			
@@ -88,8 +92,34 @@ public class Niveau {
 						this.nbPieces++;
 						this.nbPiecesBase++;
 					}
+					else if(this.tab[i][j].getId()==5) {
+						comptEnnemi++;
+					}
 				}
 			}
+			this.ennemi= new Ennemi[comptEnnemi];
+			int x=0;
+			this.coDeBase = new int[2*(comptEnnemi+1)];
+			System.out.println("a");
+			for(int i =0; i<tablo.size();i++) { // on crée les ennemis et le joueur
+				for(int j =0;j<tablo.get(i).length();j++) {
+					this.tab[i][j]=new Cellule(i, j, tablo.get(i).charAt(j));
+					if(this.tab[i][j].getId()==5) {
+						System.out.println("b");
+						this.ennemi[x]=new Ennemi("Ogre"+x,3,i,j,x);
+						this.ennemi[x].appendp(this);
+						x++;
+						System.out.println("d");
+						
+					}
+					else if(this.tab[i][j].getId()==4) {
+						System.out.println("c");
+						this.joueur[0]=jo;
+						jo.appendp(this);
+					}
+				}
+			}
+			
 		}catch(IOException e) {
 			System.err.println("Erreur lors de la lecture du fichier : " + e.getMessage()); // On vérifie si le fichier existe
 			System.exit(1);
@@ -116,17 +146,21 @@ public class Niveau {
 		return this.joueur;
 	}
 	/**
+	 * getter de ennemi
+	 * @return le tableau des ennemis
+	 */
+	public Ennemi[] getEnnmiTab() {
+		return this.ennemi;
+	}
+	/**
 	 * getter de nbJoueur
 	 * @return le nombre de joueur
 	 */
 	public int getNbJoueur() {
 		return this.nbJoueur;
 	}
-	public int getXBase() {
-		return this.xBase;
-	}
-	public int getYBase() {
-		return this.yBase;
+	public int[] getCoDeBase() {
+		return this.coDeBase;
 	}
 	/**
 	 * getter du nombre de pieces
@@ -141,146 +175,27 @@ public class Niveau {
 	 * @param jy coordonées y du joueur
 	 * @throws OutOfBorderException
 	 */
-	private void verification(int jx, int jy) {
+	protected void verification(int jx, int jy) {
 		Cellule[][] tablo= this.getTab();
 		int lt=tablo.length;
 		int lt2=tablo[0].length;
 		if((jx>=lt || jx<0 )||(jy>=lt2 || jy<0 ) || tablo[jx][jy].getId()==1) {
-			throw new OutOfBorderException("Le joueur est en dehors des limites ou dans un mur du niveau");
+			throw new OutOfBorderException("Un Personnage est en dehors des limites ou dans un mur du niveau");
 		}
 	}
-	/**
-	 * ajoute un joueur dans le tableau de joueur et le pose sur la carte à ses coordonées
-	 * @param j joueur
-	 * @throws OutOfBorderException
-	 */
-	public void appendJoueur(Joueur j) {
-		Joueur[] t=this.getJoueurTab();
-		if (t.length >= nbJoueur) {
-			t[nbJoueur]=j;
-			nbJoueur+=1;
-			Cellule[][] tablo= this.getTab();
-			
-				this.verification(j.getX(),j.getY());
-				tablo[j.getX()][j.getY()].setId('1');//(char) (nbJoueur +'0');
-				this.xBase=j.getX();
-				this.yBase=j.getY();		
-		}
+	
+	
+	public int getNbPiecesBase() {
+		return this.nbPiecesBase;
 	}
-	/**
-	 * déplacement d'un joueur
-	 * @param j joueur
-	 * @param direction N S E W pour bouger les personnages de 1 
-	 * @throws OutOfBorderException
-	 */
-	public int moveJoueur(Joueur j,dir direction) {
-			Cellule[][] tablo= this.getTab();
-			int jx=j.getX();
-			int jy=j.getY();
-			int jx2=j.getX();
-			int jy2=j.getY();
-			switch(direction){	
-			case N :
-				jx2--;
-				break;
-			case S :
-				jx2++;
-				break;
-			case W :
-				jy2--;
-				break;
-			case E :
-				jy2++;
-				break;
-			default:
-				break;
-			}
-			try {
-				int lt=tablo.length;
-				int lt2=tablo[0].length;
-				if (jx2 == lt) {
-					jx2 = 0;
-				}
-				if (jx2 == -1) {
-					jx2 = lt-1;
-				}
-				if (jy2 == lt2) {
-					jy2 = 0;
-				}
-				if (jy2 == -1) {
-					jy2 = lt2-1;
-				}
-				this.verification(jx2,jy2);
-				
-				if(tablo[jx2][jy2].getId()==2) {
-					j.setCoord(jx2,jy2);
-					j.setPoints(j.getPoints()+100);
-					this.nbPieces--;
-					tablo[jx2][jy2].setId('1');
-				}
-				else if(tablo[jx2][jy2].getId()==3) {
-					j.setVie(j.getVie()-1);
-					int xB=this.getXBase();
-					int yB=this.getYBase();
-					tablo[xB][yB].setId('1');
-					j.setCoord(xB,yB);
-				}
-				else {
-					j.setCoord(jx2,jy2);
-					tablo[jx2][jy2].setId('1');
-				}
-				tablo[jx][jy].setId(' ');
-				
-			}catch(OutOfBorderException e) {
-				
-			}
-			System.out.println(this.toString());
-			System.out.println(j.toString());
-			
-			if(this.nbPieces==0) {
-				System.out.println("Victoire\n"
-						+ "\r\n"
-						+ "      (_)    | |                  \r\n"
-						+ "__   ___  ___| |_ ___  _ __ _   _ \r\n"
-						+ "\\ \\ / / |/ __| __/ _ \\| '__| | | |\r\n"
-						+ " \\ V /| | (__| || (_) | |  | |_| |\r\n"
-						+ "  \\_/ |_|\\___|\\__\\___/|_|   \\__, |\r\n"
-						+ "                             __/ |\r\n"
-						+ "                            |___/ ");
-				return 1;
-			}
-			if(j.getVie()==0) {
-				System.out.println("GAME OVER\n"
-						+"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼\n"
-						+"███▀▀▀██┼███▀▀▀███┼███▀█▄█▀███┼██▀▀▀\n"
-						+"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼█┼┼┼██┼██┼┼┼\n"
-						+"██┼┼┼▄▄▄┼██▄▄▄▄▄██┼██┼┼┼▀┼┼┼██┼██▀▀▀\n"
-						+"██┼┼┼┼██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██┼┼┼\n"
-						+"███▄▄▄██┼██┼┼┼┼┼██┼██┼┼┼┼┼┼┼██┼██▄▄▄\n"
-						+"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼\n"
-						+"███▀▀▀███┼▀███┼┼██▀┼██▀▀▀┼██▀▀▀▀██▄┼\n"
-						+"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██┼┼┼┼██┼┼┼┼┼██┼\n"
-						+"██┼┼┼┼┼██┼┼┼██┼┼██┼┼██▀▀▀┼██▄▄▄▄▄▀▀┼\n"
-						+"██┼┼┼┼┼██┼┼┼██┼┼█▀┼┼██┼┼┼┼██┼┼┼┼┼██┼\n"
-						+"███▄▄▄███┼┼┼─▀█▀┼┼─┼██▄▄▄┼██┼┼┼┼┼██▄\n"
-						+"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼██┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼████▄┼┼┼▄▄▄▄▄▄▄┼┼┼▄████┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼┼▀▀█▄█████████▄█▀▀┼┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼┼┼┼█████████████┼┼┼┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼┼┼┼██▀▀▀███▀▀▀██┼┼┼┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼┼┼┼██┼┼┼███┼┼┼██┼┼┼┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼┼┼┼█████▀▄▀█████┼┼┼┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼┼┼┼┼███████████┼┼┼┼┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼▄▄▄██┼┼█▀█▀█┼┼██▄▄▄┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼▀▀██┼┼┼┼┼┼┼┼┼┼┼██▀▀┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼▀▀┼┼┼┼┼┼┼┼┼┼┼\n"
-						+"┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼\n");
-				j.setVie(3);
-				j.setPoints(j.getPoints()-(this.nbPiecesBase-this.nbPieces)*100);
-				return 2;
-			}return 0;
-		}
+	public void setNbPieces(int nb) {
+		this.nbPieces=nb;
+	}
+	public void setCoDeBase(int x, int i) {
+		this.coDeBase[i]=x;
+	}
+	
+	
 	
 	/**
 	 * Redéfinition de la méthode toString()
